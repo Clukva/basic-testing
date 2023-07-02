@@ -1,41 +1,45 @@
-// Uncomment the code below and write your tests
-/* import axios, { AxiosResponse } from 'axios';
-import { throttledGetDataFromApi } from './index'; */
+import axios from 'axios';
+import { throttledGetDataFromApi } from './index';
 
-jest.mock('axios');
+const responseData = { data: 'data' };
+
+const posts = '/posts';
+
+jest.useFakeTimers();
 
 describe('throttledGetDataFromApi', () => {
-  /*  test('should create instance with provided base url', async () => {
-    const url = 'https://jsonplaceholder.typicode.com';
-    const example = await throttledGetDataFromApi(url);
-    expect(example).toBeDefined();
-    if (example) {
-      expect(example.default.baseURL).toBe(url);
-    }
-  }); */
-  /*  test('should perform request to correct provided url', async () => {
-    const url = 'www.linkedin.com/';
-    const expectedData = { message: 'Success' };
-    (axios.get as jest.Mock).mockResolvedValueOnce({
-      data: expectedData,
-    } as AxiosResponse);
+  afterAll(() => {
+    jest.useRealTimers();
+  });
 
-    const result = await throttledGetDataFromApi(url);
+  test('should create instance with provided base url', async () => {
+    const spy = jest.spyOn(axios, 'create');
 
-    expect(result).toBeDefined();
-    expect(axios.get).toHaveBeenCalledTimes(1);
-    expect(axios.get).toHaveBeenCalledWith(url);
-  }); */
-  /*   test('should return response data', async () => {
-    const url = 'www.linkedin.com/';
-    const expectedData = { message: 'Success' };
-    (axios.get as jest.Mock).mockResolvedValueOnce({
-      data: expectedData,
-    } as AxiosResponse);
+    await throttledGetDataFromApi(posts);
 
-    const result = await throttledGetDataFromApi(url);
-    expect(result).toBeDefined();
-    const responseData = await result.get('/data');
-    expect(responseData).toEqual(expectedData);
-  }); */
+    jest.runAllTimers();
+    expect(spy).toHaveBeenCalledWith({
+      baseURL: 'https://jsonplaceholder.typicode.com',
+    });
+  });
+
+  test('should perform request to correct provided url', async () => {
+    const spyOnGet = jest.spyOn(axios.Axios.prototype, 'get');
+
+    await throttledGetDataFromApi(posts);
+
+    jest.runAllTimers();
+    expect(spyOnGet).toHaveBeenCalledTimes(1);
+    expect(spyOnGet).toHaveBeenCalledWith(posts);
+  });
+
+  test('should return response data', async () => {
+    jest
+      .spyOn(axios.Axios.prototype, 'get')
+      .mockResolvedValueOnce({ data: responseData });
+
+    const response = await throttledGetDataFromApi(posts);
+
+    expect(response).toBe(responseData);
+  });
 });
